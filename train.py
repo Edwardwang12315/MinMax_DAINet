@@ -39,7 +39,7 @@ parser.add_argument('--model',
                     choices=['dark', 'vgg', 'resnet50', 'resnet101', 'resnet152'],
                     help='model for training')
 parser.add_argument('--resume',
-                    default=None, type=str, # '../model/forDAINet/dark/dsfd.pth'
+                    default='../model/forDAINet/dark/dsfd.pth', type=str, # '../model/forDAINet/dark/dsfd.pth'
                     help='Checkpoint state_dict file to resume training from')
 parser.add_argument('--num_workers',
                     default=20, type=int,
@@ -137,7 +137,7 @@ def train():
         if local_rank == 0:
             print('Resuming training, loading {}...'.format(args.resume))
         start_epoch = net.load_weights(args.resume)
-        iteration = start_epoch * per_epoch_size
+        iteration = start_epoch * per_epoch_size # 4800
     else:
         base_weights = torch.load(args.save_folder + basenet)
         if local_rank == 0:

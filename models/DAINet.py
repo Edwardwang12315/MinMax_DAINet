@@ -345,18 +345,38 @@ class DSFD(nn.Module):
 		loss_mutual = cfg.WEIGHT.MC * (self.KL( _x_light , _x_dark ) + self.KL( _x_dark , _x_light ))
 		
 		# print( '暗图' )
-		# image = np.transpose( R_dark[ 0 ].detach().cpu().numpy() , (1 , 2 , 0) )  # 调整维度顺序 [C, H, W] → [H, W, C]
-		# image = (image * 255).astype( np.uint8 )
-		# plt.imshow( image )
+		# # 以下为单通道边缘图显示方法
+		# image = R_dark[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
+		# # 归一化到对称范围
+		# vmax = np.max( np.abs( image ) )
+		# image_normalized = image / vmax  # 范围[-1, 1]
+		# # 使用红蓝颜色映射可视化
+		# plt.imshow( image_normalized , cmap = 'RdBu' , vmin = -1 , vmax = 1 )
+
+		# # # 以下为三通道彩色图显示方法
+		# # image = np.transpose( R_dark[ 0 ].detach().cpu().numpy() , (1 , 2 , 0) )  # 调整维度顺序 [C, H, W] → [H, W, C]
+		# # image = (image * 255).astype( np.uint8 )
+		# # plt.imshow( image )
+
 		# plt.axis( 'off' )
 		# # exit()
 		# # 保存图像到文件
 		# plt.savefig( f'train_暗图.png' , bbox_inches = 'tight' , pad_inches = 0 , dpi = 800 )
 		
 		# print( '亮图' )
-		# image = np.transpose( R_light[ 0 ].detach().cpu().numpy() , (1 , 2 , 0) )  # 调整维度顺序 [C, H, W] → [H, W, C]
-		# image = (image * 255).astype( np.uint8 )
-		# plt.imshow( image )
+		# # 以下为单通道边缘图显示方法
+		# image = R_dark[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
+		# # 归一化到对称范围
+		# vmax = np.max( np.abs( image ) )
+		# image_normalized = image / vmax  # 范围[-1, 1]
+		# # 使用红蓝颜色映射可视化
+		# plt.imshow( image_normalized , cmap = 'RdBu' , vmin = -1 , vmax = 1 )
+
+		# # # 以下为三通道彩色图显示方法
+		# # image = np.transpose( R_light[ 0 ].detach().cpu().numpy() , (1 , 2 , 0) )  # 调整维度顺序 [C, H, W] → [H, W, C]
+		# # image = (image * 255).astype( np.uint8 )
+		# # plt.imshow( image )
+
 		# plt.axis( 'off' )
 		# # 保存图像到文件
 		# plt.savefig( f'train_亮图.png' , bbox_inches = 'tight' , pad_inches = 0 , dpi = 800 )
@@ -522,7 +542,7 @@ class DSFD(nn.Module):
 			mdata = torch.load(base_file,
 							   map_location=lambda storage, loc: storage)
 
-			epoch = 0 # lr=1.58e-06
+			epoch = 14 # lr=0.0015
 			self.load_state_dict(mdata)
 			print('Finished!')
 		else:

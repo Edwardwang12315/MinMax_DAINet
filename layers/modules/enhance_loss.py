@@ -110,8 +110,17 @@ class EnhanceLoss(nn.Module):
         # enhance_loss = losses_equal_R + losses_recon_low + losses_recon_high + losses_smooth_low \
         #                + losses_smooth_high + losses_rc
 
-        loss_decoder = 1 * (self.gram_loss(R_dark, R_light.detach()) + self.grad_loss(R_dark, R_light.detach())) # decoder输出
-        loss_ciconv = 1 * (self.gram_loss(R_dark_2, R_light_2.detach()) + self.grad_loss(R_dark_2, R_light_2.detach())) # ciconv输出
+        """ 
+        5.20 版本-the FIRST
+        loss_decoder=0.007621681783348322,loss_ciconv=2.627662420272827,loss_dark=1.7443002462387085,loss_light=2.4949073791503906
+        loss_decoder=0.004208073019981384,loss_ciconv=2.6099538803100586,loss_dark=1.66346275806427,loss_light=2.567932367324829
+        loss_decoder=0.004936039447784424,loss_ciconv=2.67338490486145,loss_dark=1.770261287689209,loss_light=2.609659433364868
+        loss_decoder=0.004414223600178957,loss_ciconv=2.396692991256714,loss_dark=1.6409627199172974,loss_light=2.322230100631714 
+        """
+        # loss_decoder = 1 * (self.gram_loss(R_dark, R_light.detach()) + self.grad_loss(R_dark, R_light.detach())) # decoder输出
+        loss_decoder = F.mse_loss(R_dark, R_light.detach()) * 1. + (1. - ssim(R_dark, R_light.detach())) # decoder输出
+        # loss_ciconv = 1 * (self.gram_loss(R_dark_2, R_light_2.detach()) + self.grad_loss(R_dark_2, R_light_2.detach())) # ciconv输出
+        loss_ciconv = F.mse_loss(R_dark_2, R_light_2.detach()) * 1. + (1. - ssim(R_dark_2, R_light_2.detach())) # ciconv输出
         loss_dark = 1 * (self.gram_loss(R_dark, R_dark_2.detach()) + self.grad_loss(R_dark, R_dark_2.detach())) # dark输出
         loss_light = 1 * (self.gram_loss(R_light, R_light_2.detach()) + self.grad_loss(R_light, R_light_2.detach())) # light输出
 

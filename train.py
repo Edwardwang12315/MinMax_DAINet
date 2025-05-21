@@ -48,7 +48,7 @@ parser.add_argument('--cuda',
                     default=True, type=bool,
                     help='Use CUDA to train model')
 parser.add_argument('--lr', '--learning-rate',
-                    default=5e-4, type=float,
+                    default=5e-6, type=float,
                     help='initial learning rate')
 parser.add_argument('--momentum',
                     default=0.9, type=float,
@@ -137,7 +137,7 @@ def train():
         if local_rank == 0:
             print('Resuming training, loading {}...'.format(args.resume))
         start_epoch = net.load_weights(args.resume)
-        iteration = start_epoch * per_epoch_size # 4800
+        iteration = start_epoch * per_epoch_size # 10200
     else:
         base_weights = torch.load(args.save_folder + basenet)
         if local_rank == 0:

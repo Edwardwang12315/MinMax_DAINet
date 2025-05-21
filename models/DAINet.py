@@ -344,9 +344,11 @@ class DSFD(nn.Module):
 		# 经过网络提取特征后的KL散度损失
 		loss_mutual = cfg.WEIGHT.MC * (self.KL( _x_light , _x_dark ) + self.KL( _x_dark , _x_light ))
 		
-		# print( '暗图' )
+		# print( 'train_暗图' )
+
 		# # 以下为单通道边缘图显示方法
 		# image = R_dark[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
+		# print(image)
 		# # 归一化到对称范围
 		# vmax = np.max( np.abs( image ) )
 		# image_normalized = image / vmax  # 范围[-1, 1]
@@ -363,9 +365,9 @@ class DSFD(nn.Module):
 		# # 保存图像到文件
 		# plt.savefig( f'train_暗图.png' , bbox_inches = 'tight' , pad_inches = 0 , dpi = 800 )
 		
-		# print( '亮图' )
+		# print( 'train_亮图' )
 		# # 以下为单通道边缘图显示方法
-		# image = R_dark[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
+		# image = R_light[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
 		# # 归一化到对称范围
 		# vmax = np.max( np.abs( image ) )
 		# image_normalized = image / vmax  # 范围[-1, 1]
@@ -505,6 +507,7 @@ class DSFD(nn.Module):
 		# print( '暗图' )
 		# # 以下为单通道边缘图显示方法
 		# image = R_dark_c[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
+		# print(R_dark_c)
 		# # 归一化到对称范围
 		# vmax = np.max( np.abs( image ) )
 		# image_normalized = image / vmax  # 范围[-1, 1]
@@ -542,7 +545,7 @@ class DSFD(nn.Module):
 			mdata = torch.load(base_file,
 							   map_location=lambda storage, loc: storage)
 
-			epoch = 14 # lr=0.0015
+			epoch = 31 # lr=0.0015
 			self.load_state_dict(mdata)
 			print('Finished!')
 		else:

@@ -445,11 +445,11 @@ if __name__ == '__main__':
         draw_boxes_with_matplotlib( image , dets,img_save)
     
     # 统计mAP
-    ground_truth_path = '../dataset/DarkFace/label'  # 修改为你的真实标签路径
-    detection_path = os.path.join(save_path, 'annotations')
-    if os.path.exists(ground_truth_path):
-        ap = compute_mAP(detection_path, ground_truth_path)
-        print(f'mAP at IoU 0.5: {ap:.4f}')
-    else:
-        print('真实标签路径不存在，跳过mAP计算')
+    # ground_truth_path = '../dataset/DarkFace/label'  # 修改为你的真实标签路径
+    # detection_path = os.path.join(save_path, 'annotations')
+    # if os.path.exists(ground_truth_path):
+    #     ap = compute_mAP(detection_path, ground_truth_path)
+    #     print(f'mAP at IoU 0.5: {ap:.4f}')
+    # else:
+    #     print('真实标签路径不存在，跳过mAP计算')
 

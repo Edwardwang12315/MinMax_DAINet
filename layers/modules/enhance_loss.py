@@ -30,35 +30,45 @@ def smooth(input_I, input_R):
     return torch.mean(gradient(input_I, "x") * torch.exp(-10 * ave_gradient(input_R, "x")) +
                       gradient(input_I, "y") * torch.exp(-10 * ave_gradient(input_R, "y")))
 
-# import torch
-# import torch.nn as nn
-# import torch.fft
+import torch
+import torch.nn as nn
+import torch.fft
 
-# class FourierLoss(nn.Module):
-#     def __init__(self, high_freq_ratio=0.5):
-#         super().__init__()
-#         self.high_freq_ratio = high_freq_ratio  # 控制高频分量权重
-    
-#     def forward(self, pred, target):
-#         # 傅里叶变换
-#         pred_fft = torch.fft.fft2(pred)
-#         target_fft = torch.fft.fft2(target)
+class FourierLoss(nn.Module):
+    def __init__(self, high_freq_weight=0.8, cut_ratio=0.2):
+        super().__init__()
+        self.high_freq_weight = high_freq_weight  # 高频分量权重
+        self.cut_ratio = cut_ratio                # 低频截止比例（中心区域）
+
+    def forward(self, pred, target):
+        """ 
+        pred/target形状: (B, 1, H, W) 的单通道数据
+        """
+        # 傅里叶变换
+        pred_fft = torch.fft.fft2(pred)        # 输出复数张量 (B, 1, H, W)
+        target_fft = torch.fft.fft2(target)
+
+        # --- 幅度谱损失 ---
+        pred_mag = torch.abs(pred_fft)          # 幅度谱 (B, 1, H, W)
+        target_mag = torch.abs(target_fft)
         
-#         # 计算幅度谱
-#         pred_mag = torch.abs(pred_fft)
-#         target_mag = torch.abs(target_fft)
+        # --- 高频掩码生成 ---
+        _, _, h, w = pred.shape
+        mask = torch.ones_like(pred_mag)        # 初始全1掩码（保留所有频率）
+        ch, cw = int(h * self.cut_ratio), int(w * self.cut_ratio)
+        # 中心区域置零（抑制低频）
+        mask[..., h//2 - ch : h//2 + ch, w//2 - cw : w//2 + cw] = 0
         
-#         # 提取高频分量（假设图像中心为低频，边缘为高频）
-#         h, w = pred.shape[-2:]
-#         mask = torch.zeros_like(pred_mag)
-#         ch, cw = h//4, w//4
-#         mask[..., ch:-ch, cw:-cw] = 1  # 中心区域置零（保留边缘高频）
-#         mask = 1 - mask
+        # --- 损失计算 ---
+        # 高频损失（掩码外区域）
+        high_loss = F.l1_loss(pred_mag * mask, target_mag * mask)
         
-#         # 计算高频损失
-#         high_freq_loss = torch.mean(mask * torch.abs(pred_mag - target_mag))
+        # 全频带损失（可选，根据需求调整）
+        full_loss = F.l1_loss(pred_mag, target_mag)
         
-#         return high_freq_loss * self.high_freq_ratio
+        # 加权组合
+        total_loss = self.high_freq_weight * high_loss + (1 - self.high_freq_weight) * full_loss
+        return total_loss
     
 class GramLoss(nn.Module):
     def __init__(self):
@@ -91,7 +101,7 @@ class GradientLoss(nn.Module):
 class EnhanceLoss(nn.Module):
     def __init__(self):
         super(EnhanceLoss, self).__init__()
-        # self.fourier_loss = FourierLoss()
+        self.fourier_loss = FourierLoss()
         self.gram_loss = GramLoss()
         self.grad_loss = GradientLoss()
 
@@ -117,12 +127,21 @@ class EnhanceLoss(nn.Module):
         loss_decoder=0.004936039447784424,loss_ciconv=2.67338490486145,loss_dark=1.770261287689209,loss_light=2.609659433364868
         loss_decoder=0.004414223600178957,loss_ciconv=2.396692991256714,loss_dark=1.6409627199172974,loss_light=2.322230100631714 
         """
+        # 对同模块不同输入应该有像素级的对齐
         # loss_decoder = 1 * (self.gram_loss(R_dark, R_light.detach()) + self.grad_loss(R_dark, R_light.detach())) # decoder输出
         loss_decoder = F.mse_loss(R_dark, R_light.detach()) * 1. + (1. - ssim(R_dark, R_light.detach())) # decoder输出
         # loss_ciconv = 1 * (self.gram_loss(R_dark_2, R_light_2.detach()) + self.grad_loss(R_dark_2, R_light_2.detach())) # ciconv输出
         loss_ciconv = F.mse_loss(R_dark_2, R_light_2.detach()) * 1. + (1. - ssim(R_dark_2, R_light_2.detach())) # ciconv输出
-        loss_dark = 1 * (self.gram_loss(R_dark, R_dark_2.detach()) + self.grad_loss(R_dark, R_dark_2.detach())) # dark输出
-        loss_light = 1 * (self.gram_loss(R_light, R_light_2.detach()) + self.grad_loss(R_light, R_light_2.detach())) # light输出
+
+        # 跨模块对齐应该以边缘+纹理为主，结构相似性为辅
+        loss_dark = (1 * self.gram_loss(R_dark, R_dark_2.detach()) # 强调纹理
+                            + self.grad_loss(R_dark, R_dark_2.detach()) # 强调轮廓
+                            + (1. - ssim(R_dark, R_dark_2.detach()))  # 强调结构
+                            ) # dark输出
+        loss_light = (1 * self.gram_loss(R_light, R_light_2.detach()) 
+                      + self.grad_loss(R_light, R_light_2.detach()) 
+                      + (1. - ssim(R_light, R_light_2.detach()))
+                      ) # light输出
 
         # print(f'loss_decoder={loss_decoder},loss_ciconv={loss_ciconv},loss_dark={loss_dark},loss_light={loss_light}')
         return loss_decoder,loss_ciconv,loss_dark,loss_light

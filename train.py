@@ -32,14 +32,14 @@ parser = argparse.ArgumentParser(
     description='DSFD face Detector Training With Pytorch')
 train_set = parser.add_mutually_exclusive_group()
 parser.add_argument('--batch_size',
-                    default=10, type=int,
+                    default=2, type=int, # server上为10 我的电脑上2
                     help='Batch size for training')
 parser.add_argument('--model',
                     default='dark', type=str,
                     choices=['dark', 'vgg', 'resnet50', 'resnet101', 'resnet152'],
                     help='model for training')
 parser.add_argument('--resume',
-                    default='../model/forDAINet/dark/dsfd.pth', type=str, # '../model/forDAINet/dark/dsfd.pth'
+                    default=None, type=str, # '../model/forDAINet/dark/dsfd.pth'
                     help='Checkpoint state_dict file to resume training from')
 parser.add_argument('--num_workers',
                     default=20, type=int,
@@ -48,7 +48,7 @@ parser.add_argument('--cuda',
                     default=True, type=bool,
                     help='Use CUDA to train model')
 parser.add_argument('--lr', '--learning-rate',
-                    default=5e-6, type=float,
+                    default=5e-4, type=float,
                     help='initial learning rate')
 parser.add_argument('--momentum',
                     default=0.9, type=float,
@@ -171,7 +171,7 @@ def train():
     lr = args.lr * np.round(np.sqrt(args.batch_size / 4 * torch.cuda.device_count()),4)
     param_group = []
     param_group += [{'params': dsfd_net.vgg.parameters(), 'lr': lr}]
-    if True:
+    if False:
         param_group += [{'params': dsfd_net.extras.parameters(), 'lr': lr}]
         param_group += [{'params': dsfd_net.fpn_topdown.parameters(), 'lr': lr}]
         param_group += [{'params': dsfd_net.fpn_latlayer.parameters(), 'lr': lr}]
@@ -288,7 +288,7 @@ def train():
                         #   + F.l1_loss(R_dark_2.detach(), R_light_2) + (1. - ssim(R_dark_2.detach(), R_light_2))
                           ) * cfg.WEIGHT.DCOM
 
-            if True:
+            if False:
                 loss = loss_l_pa1l + loss_c_pal1 + loss_l_pa12 + loss_c_pal2 + losses_ref + losses_cons + losses_feat + losses_cic
             else:
                 loss = losses_ref + losses_cons + losses_feat + losses_cic

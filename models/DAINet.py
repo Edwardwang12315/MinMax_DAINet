@@ -123,7 +123,8 @@ class DSFD(nn.Module):
 			nn.Conv2d(64, 3, kernel_size=3, padding=1),
 			nn.ReLU(inplace=True),
 			nn.Conv2d(3, 1, kernel_size=1, padding=0),
-			nn.Sigmoid()
+			# nn.Sigmoid()
+			# nn.BatchNorm2d(1)
 		)
 		self.ciconv2d_l = CIConv2d(invariant = 'W',k = 3,scale=0.0)
 		self.ciconv2d_d = CIConv2d(invariant = 'W',k = 3,scale=0.0)
@@ -343,28 +344,43 @@ class DSFD(nn.Module):
 		_x_light = _x_light.flatten(start_dim=2).mean(dim=-1)
 		# 经过网络提取特征后的KL散度损失
 		loss_mutual = cfg.WEIGHT.MC * (self.KL( _x_light , _x_dark ) + self.KL( _x_dark , _x_light ))
-		
-		# print( 'train_暗图' )
 
+		# ''' 显示部分（调试用） '''
+		# print( 'train_暗图' )
 		# # 以下为单通道边缘图显示方法
 		# image = R_dark[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
-		# print(image)
+		#
+		# # 新增
+		# # 保存图像数据
+		# # np.savetxt( 'train_暗图.txt' , image)
+		# # 计算图像数据特征
+		# # max = np.max(image)
+		# # min = np.min(image)
+		# # mean = np.mean(image)
+		# # var = np.var(image)
+		# # print(f'归一化前:  最大值：{max} | 最小值：{min} |均值：{mean} | 均方差：{var}')
+		#
 		# # 归一化到对称范围
 		# vmax = np.max( np.abs( image ) )
 		# image_normalized = image / vmax  # 范围[-1, 1]
+		#
+		# # 新增
+		# # 保存图像数据
+		# # np.savetxt( 'train_暗图_normalized.txt' , image_normalized)
+		# # 计算图像数据特征
+		# # max_normalized = np.max(image_normalized)
+		# # min_normalized = np.min(image_normalized)
+		# # mean_normalized = np.mean(image_normalized)
+		# # var_normalized = np.var(image_normalized)
+		# # print(f'归一化后:  最大值：{max_normalized} | 最小值：{min_normalized} |均值：{mean_normalized} | 均方差：{var_normalized}')
+		#
 		# # 使用红蓝颜色映射可视化
 		# plt.imshow( image_normalized , cmap = 'RdBu' , vmin = -1 , vmax = 1 )
-
-		# # # 以下为三通道彩色图显示方法
-		# # image = np.transpose( R_dark[ 0 ].detach().cpu().numpy() , (1 , 2 , 0) )  # 调整维度顺序 [C, H, W] → [H, W, C]
-		# # image = (image * 255).astype( np.uint8 )
-		# # plt.imshow( image )
-
 		# plt.axis( 'off' )
-		# # exit()
 		# # 保存图像到文件
 		# plt.savefig( f'train_暗图.png' , bbox_inches = 'tight' , pad_inches = 0 , dpi = 800 )
-		
+		#
+		#
 		# print( 'train_亮图' )
 		# # 以下为单通道边缘图显示方法
 		# image = R_light[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
@@ -373,12 +389,6 @@ class DSFD(nn.Module):
 		# image_normalized = image / vmax  # 范围[-1, 1]
 		# # 使用红蓝颜色映射可视化
 		# plt.imshow( image_normalized , cmap = 'RdBu' , vmin = -1 , vmax = 1 )
-
-		# # # 以下为三通道彩色图显示方法
-		# # image = np.transpose( R_light[ 0 ].detach().cpu().numpy() , (1 , 2 , 0) )  # 调整维度顺序 [C, H, W] → [H, W, C]
-		# # image = (image * 255).astype( np.uint8 )
-		# # plt.imshow( image )
-
 		# plt.axis( 'off' )
 		# # 保存图像到文件
 		# plt.savefig( f'train_亮图.png' , bbox_inches = 'tight' , pad_inches = 0 , dpi = 800 )
@@ -504,22 +514,43 @@ class DSFD(nn.Module):
 		R_dark_c = self.ciconv2d_d(_x)
 		R_light_c = self.ciconv2d_l(_x_light)
 		
-		# print( '暗图' )
+		# ''' 显示部分（调试用） '''
+		# print( 'ciconv_暗图' )
 		# # 以下为单通道边缘图显示方法
 		# image = R_dark_c[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
-		# print(R_dark_c)
+		#
+		# # 新增
+		# # 保存图像数据
+		# # np.savetxt( 'ciconv_暗图.txt' , image)
+		# # 计算图像数据特征
+		# # max = np.max( image )
+		# # min = np.min( image )
+		# # mean = np.mean( image )
+		# # var = np.var( image )
+		# # print( f'归一化前:  最大值：{max} | 最小值：{min} |均值：{mean} | 均方差：{var}' )
+		#
 		# # 归一化到对称范围
 		# vmax = np.max( np.abs( image ) )
 		# image_normalized = image / vmax  # 范围[-1, 1]
+		#
+		# # 新增
+		# # 保存图像数据
+		# # np.savetxt( 'ciconv_暗图_normalized.txt' , image_normalized)
+		# # 计算图像数据特征
+		# # max_normalized = np.max( image_normalized )
+		# # min_normalized = np.min( image_normalized )
+		# # mean_normalized = np.mean( image_normalized )
+		# # var_normalized = np.var( image_normalized )
+		# # print( f'归一化后:  最大值：{max_normalized} | 最小值：{min_normalized} |均值：{mean_normalized} | 均方差：{var_normalized}' )
+		#
 		# # 使用红蓝颜色映射可视化
 		# plt.imshow( image_normalized , cmap = 'RdBu' , vmin = -1 , vmax = 1 )
-		
 		# plt.axis( 'off' )
 		# # 保存图像到文件
 		# plt.savefig( f'ciconv_暗图.png' , bbox_inches = 'tight' , pad_inches = 0 , dpi = 800 )
-		
-		
-		# print( '亮图' )
+		#
+		#
+		# print( 'ciconv_亮图' )
 		# # 以下为单通道边缘图显示方法
 		# image = R_light_c[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
 		# # 归一化到对称范围
@@ -527,7 +558,6 @@ class DSFD(nn.Module):
 		# image_normalized = image / vmax  # 范围[-1, 1]
 		# # 使用红蓝颜色映射可视化
 		# plt.imshow( image_normalized , cmap = 'RdBu' , vmin = -1 , vmax = 1 )
-		
 		# plt.axis( 'off' )
 		# # 保存图像到文件
 		# plt.savefig( f'ciconv_亮图.png' , bbox_inches = 'tight' , pad_inches = 0 , dpi = 800 )
@@ -545,7 +575,7 @@ class DSFD(nn.Module):
 			mdata = torch.load(base_file,
 							   map_location=lambda storage, loc: storage)
 
-			epoch = 31 # lr=0.0015
+			epoch = 0 # lr=0.0015
 			self.load_state_dict(mdata)
 			print('Finished!')
 		else:
@@ -836,6 +866,7 @@ class CIConv2d( nn.Module ) :
 		inv_out = self.inv_function( E , Ex , Ey , El , Elx , Ely , Ell , Ellx , Elly )
 		inv_out = F.instance_norm( torch.log( inv_out + eps ) )
 		
+		# print(f'out max={inv_out.max()},min = {inv_out.min()},mean = {inv_out.mean()}，var = {inv_out.var()}')
 		# # 以下为单通道边缘图显示方法
 		# image = inv_out[ 0 ].detach().cpu().numpy().squeeze()  # 维度 [H, W]
 		

@@ -137,7 +137,7 @@ def train():
         if local_rank == 0:
             print('Resuming training, loading {}...'.format(args.resume))
         start_epoch = net.load_weights(args.resume)
-        iteration = start_epoch * per_epoch_size # 10200
+        iteration = start_epoch * per_epoch_size # 20700
     else:
         base_weights = torch.load(args.save_folder + basenet)
         if local_rank == 0:

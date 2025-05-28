@@ -32,14 +32,14 @@ parser = argparse.ArgumentParser(
     description='DSFD face Detector Training With Pytorch')
 train_set = parser.add_mutually_exclusive_group()
 parser.add_argument('--batch_size',
-                    default=10, type=int, # server上为10 我的电脑上2
+                    default=8, type=int, # server上为8 我的电脑上2,仅训练ref时为16
                     help='Batch size for training')
 parser.add_argument('--model',
                     default='dark', type=str,
                     choices=['dark', 'vgg', 'resnet50', 'resnet101', 'resnet152'],
                     help='model for training')
 parser.add_argument('--resume',
-                    default='../model/forDAINet/dark/dsfd.pth', type=str, # '../model/forDAINet/dark/dsfd.pth'
+                    default=None, type=str, # '../model/forDAINet/dark/dsfd.pth'
                     help='Checkpoint state_dict file to resume training from')
 parser.add_argument('--num_workers',
                     default=20, type=int,
@@ -150,7 +150,7 @@ def train():
     if not args.resume:
         if local_rank == 0:
             print('Initializing weights...')
-        if True:
+        if True :
             net.extras.apply(net.weights_init)
             net.fpn_topdown.apply(net.weights_init)
             net.fpn_latlayer.apply(net.weights_init)
@@ -163,15 +163,15 @@ def train():
         net.ciconv2d_l.apply(net.weights_init)
         net.ciconv2d_d.apply(net.weights_init)
 
-    # if True:
-    #     LoadLocalW(net,'../model/forDAINet/dark/dsfd.pth')
+    if True:
+        LoadLocalW(net,'../model/forDAINet/dark/dsfd.pth')
 
     # Scaling the lr
     # 设置了根据批次大小和gpu数量调整学习率的机制
     lr = args.lr * np.round(np.sqrt(args.batch_size / 4 * torch.cuda.device_count()),4)
     param_group = []
     param_group += [{'params': dsfd_net.vgg.parameters(), 'lr': lr}]
-    if True:
+    if True :
         param_group += [{'params': dsfd_net.extras.parameters(), 'lr': lr}]
         param_group += [{'params': dsfd_net.fpn_topdown.parameters(), 'lr': lr}]
         param_group += [{'params': dsfd_net.fpn_latlayer.parameters(), 'lr': lr}]
@@ -260,7 +260,7 @@ def train():
             # backprop
             optimizer.zero_grad()
             # 损失函数整理
-            if True:
+            if True :
                 loss_l_pa1l, loss_c_pal1 = criterion(out[:3], targetss)
                 loss_l_pa12, loss_c_pal2 = criterion(out[3:], targetss)
 
@@ -288,7 +288,7 @@ def train():
                         #   + F.l1_loss(R_dark_2.detach(), R_light_2) + (1. - ssim(R_dark_2.detach(), R_light_2))
                           ) * cfg.WEIGHT.DCOM
 
-            if True:
+            if True :
                 loss = loss_l_pa1l + loss_c_pal1 + loss_l_pa12 + loss_c_pal2 + losses_ref + losses_cons + losses_feat + losses_cic
             else:
                 loss = losses_ref + losses_cons + losses_feat + losses_cic
@@ -299,7 +299,7 @@ def train():
             optimizer.step()
             t1 = time.time()
             losses += loss.item()
-            if True:
+            if True :
                 loss_l1 += loss_l_pa1l.item()
                 loss_c1 += loss_c_pal1.item()
                 loss_l2 += loss_l_pa12.item()
@@ -311,7 +311,7 @@ def train():
             
             if iteration % 100 == 0:
                 tloss = losses / (batch_idx + 1)
-                if True:
+                if True :
                     tloss_l1 = loss_l1 / (batch_idx + 1)
                     tloss_c1 = loss_c1 / (batch_idx + 1)
                     tloss_l2 = loss_l2 / (batch_idx + 1)
@@ -324,7 +324,7 @@ def train():
                 if local_rank == 0:
                     print( 'Timer: %.4f' % (t1 - t0) )
                     print( 'epoch:' + repr( epoch ) + ' || iter:' + repr( iteration ) + ' || Loss:%.4f' % (tloss) )
-                    if True:
+                    if True :
                         print( '->> pal1 conf loss:{:.4f} || pal1 loc loss:{:.4f}'.format( tloss_c1 , tloss_l1 ) )
                         print( '->> pal2 conf loss:{:.4f} || pal2 loc loss:{:.4f}'.format( tloss_c2 , tloss_l2 ) )
                     print( '->> feature loss:{:.4f} || contrast loss:{:.4f} || lowlevel loss:{:.4f} || cic_decom loss:{:.4f}'.format( tloss_ft , tloss_rf, tloss_co,tloss_cic) )
@@ -340,7 +340,7 @@ def train():
             iteration += 1
         # if local_rank == 0:
         if (epoch + 1) >= 0:
-            if True:
+            if True :
                 val(epoch, net, dsfd_net, criterion)
             global min_loss
             if tloss < min_loss :

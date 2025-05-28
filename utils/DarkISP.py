@@ -19,7 +19,7 @@ def random_noise_levels():
     log_shot_noise = np.random.uniform(log_min_shot_noise, log_max_shot_noise)
     shot_noise = np.exp(log_shot_noise)
 
-    line = lambda x: 1.8 * x + 0.8 # 初始为：lambda x: 2.18 * x + 1.20 更改为 lambda x: 1.8 * x + 0.8
+    line = lambda x: 2.18 * x + 1.20 # 初始为：lambda x: 2.18 * x + 1.20 更改为 lambda x: 1.8 * x + 0.8
     log_read_noise = line(log_shot_noise) + np.random.normal(scale=0.26) # 减小噪声波动，初始为scale=0.26 更改为 
     # print('shot noise and read noise:', log_shot_noise, log_read_noise)
     read_noise = np.exp(log_read_noise)
@@ -134,8 +134,8 @@ def Low_Illumination_Degrading(img, safe_invert=False):
     var = torch.max(var, epsilon)
     # print('the var is:', var)
     noise = torch.normal(mean=0, std=torch.sqrt(var))
-    # img6 = img5 + noise #允许负值
-    img6 = torch.clamp(img5 + noise, min=0.0)  # 禁止负值
+    img6 = img5 + noise #允许负值
+    # img6 = torch.clamp(img5 + noise, min=0.0)  # 禁止负值
 
     '''
     (3)ISP part(RAW2RGB): 

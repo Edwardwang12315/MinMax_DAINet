@@ -256,8 +256,12 @@ def nms(boxes, scores, overlap=0.5, top_k=200):
     """
 
     keep = scores.new(scores.size(0)).zero_().long()
-    if boxes.numel() == 0:
-        return keep
+        # 添加空输入处理
+    if boxes.numel() == 0 or scores.numel() == 0:
+        # 返回两个空张量 (保持维度)
+        return torch.empty((0,), dtype=torch.long, device=boxes.device), 0
+    # if boxes.numel() == 0:
+    #     return keep
     x1 = boxes[:, 0]
     y1 = boxes[:, 1]
     x2 = boxes[:, 2]

@@ -57,11 +57,11 @@ class Detect(Function):
             for cl in range(1, self.num_classes):
                 c_mask = conf_scores[cl].gt(self.conf_thresh)
                 scores = conf_scores[cl][c_mask]
-                
-                if scores.dim() == 0:
-                    continue
                 l_mask = c_mask.unsqueeze(1).expand_as(boxes)
                 boxes_ = boxes[l_mask].view(-1, 4)
+
+                if scores.dim() == 0 or scores.numel() == 0 or boxes_.size(0) == 0 :
+                    continue
                 ids, count = nms(
                     boxes_, scores, self.nms_thresh, self.nms_top_k)
                 count = count if count < self.top_k else self.top_k

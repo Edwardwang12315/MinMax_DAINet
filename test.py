@@ -66,7 +66,7 @@ def detect_face(img, tmp_shrink):
     if use_cuda:
         x = x.cuda()
 
-    y = net.test_forward(x)[0]
+    y = net.test_forward(x) # MinMax 的 test_forward 返回值只有一个，不加[0]
     detections = y.data.cpu().numpy()
 
     # # 转换为 0~255 的 uint8 类型
@@ -220,7 +220,7 @@ def load_models():
     print('build network')
     net = build_net('test', num_classes=2, model='dark')
     net.eval()
-    net.load_state_dict(torch.load('../model/forDAINet/dark/dsfd.pth')) # Set the dir of your model weight
+    net.load_state_dict(torch.load('../../model/forDAINet/dark/dsfd.pth')) # Set the dir of your model weight
 
     if use_cuda:
         net = net.cuda()
@@ -240,6 +240,7 @@ def draw_boxes_with_matplotlib(image, dets,save_path):
             ax.text(xmin, ymin, f'{score:.2f}', color='r', fontsize=6)
 
     plt.savefig( save_path , bbox_inches = 'tight' ,dpi = 600 ,pad_inches=0)  # 保存为高分辨率图片
+    plt.close(fig)
     # plt.show(block=False)# 控制是否停留
 
 # 新增计算IoU的函数
@@ -386,7 +387,7 @@ if __name__ == '__main__':
     save_path = './result'
 
     def load_images():
-      imglist = glob.glob('../dataset/DarkFace/image/*.png') # Set the dir of your test data
+      imglist = glob.glob('../../dataset/DarkFace/image/*.png') # Set the dir of your test data
       return imglist
 
     ''' Main Test '''
@@ -434,15 +435,15 @@ if __name__ == '__main__':
         now += 1
         print('Processing: {}/{}'.format(now + 1, img_list.__len__()))
 
-        # 在代码中调用绘制函数
-        image = Image.open( img_path )
-        if image.mode == 'L' :
-            image = image.convert( 'RGB' )
-        image = np.array( image )
-
-        # 假设 dets 是检测到的框
-        img_save=os.path.join(save_path,"images",Path(os.path.basename(img_path)).stem + '.png')
-        draw_boxes_with_matplotlib( image , dets,img_save)
+        """ 这部分非常耗时 """
+        # # 在代码中调用绘制函数
+        # image = Image.open( img_path )
+        # if image.mode == 'L' :
+        #     image = image.convert( 'RGB' )
+        # image = np.array( image )
+        # # 假设 dets 是检测到的框
+        # img_save=os.path.join(save_path,"images",Path(os.path.basename(img_path)).stem + '.png')
+        # draw_boxes_with_matplotlib( image , dets,img_save)
     
     # 统计mAP
     ground_truth_path = '../dataset/DarkFace/label'  # 修改为你的真实标签路径
